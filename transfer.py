@@ -26,7 +26,6 @@ def load_flight_log(yaml_file):
         print 'cannot open', yaml_file
         raise
 
-    pp.pprint(flight_log)
     return flight_log
 
 def parse_filename(file_name):
@@ -37,7 +36,7 @@ def parse_filename(file_name):
     return date, flight_no
 
 
-def make_dest_dirs(dest_dir):
+def make_dest_dirs(dest_dir, flight_log):
     if(os.path.isdir(dest_dir)):
         print('%s exists' % dest_dir)
     else:
@@ -94,13 +93,23 @@ def make_dest_dirs(dest_dir):
     return
 
 def main():
-    make_dest_dirs(dest_dir)
-    file_name = '2012-11-07-flight_007-050.dng'
-    [date, flight] = parse_filename(file_name)
-    print date
-    print flight
+    flight_log = load_flight_log('flight_log.yml')
+    pp.pprint(flight_log)
+    for week,value in flight_log.iteritems():
+        print week
+        for river, value in flight_log[week].iteritems():
+            print("  " + river)
+            for date, value in flight_log[week][river].iteritems():
+                print("    " + date)
+                for mile, value in flight_log[week][river][date].iteritems():
+                    print("      " + mile)
 
-    load_flight_log('flight_log.yml')
+
+    #make_dest_dirs(dest_dir)
+    #file_name = '2012-11-07-flight_007-050.dng'
+    #[date, flight] = parse_filename(file_name)
+    #print date
+    #print flight
 
 if __name__ == '__main__':
     main()
