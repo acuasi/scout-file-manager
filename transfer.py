@@ -5,10 +5,12 @@
 # into the meaningful folder hierarchy
 
 import os
+import errno
 import re
 import shutil
 import yaml
 import pprint
+import glob
 
 source_dir = "/Volumes/Storage/IPC-test/85/2012-11-07"
 dest_dir = "/Volumes/Storage/IPC-test/IPC"
@@ -36,22 +38,75 @@ def parse_filename(file_name):
     return date, flight_no
 
 def check_folder(path):
-    if not os.path.isdir(path):
-        print('Creating %s' % path)
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+def prep_dest(dest_dir, week, river, mile, folder):
+    new_dest_dir = os.path.join(dest_dir, week)
+    new_dest_dir = os.path.join(new_dest_dir, river)
+    new_dest_dir = os.path.join(new_dest_dir, mile)
+    new_dest_dir = os.path.join(new_dest_dir, folder)+'/'
+    return new_dest_dir
+
+def copy_files(source_dir, dest_dir, flight_log):
+    for week,value in flight_log.iteritems():
+        print(week)
+        for river, value in flight_log[week].iteritems():
+            print("  " + river)
+            for date, value in flight_log[week][river].iteritems():
+                for mile, flights in flight_log[week][river][date].iteritems():
+                    for flight in flights.split(', '):
+                        # we split on commas and spaces so we dont have to add a bunch of markup to the yaml
+                        # do leading zeros on the flight number
+                        flight = str(flight.split('f')[1]).zfill(3)
+                        #print("    " + mile + ":\t" + date+"-flight_"+flight)
+                        # now we know what flight files to fetch and where to copy them to
+                        logs = source_dir+'/Log/'+date+'-flight_'+flight+'*'
+                        data = source_dir+'/RawData/'+date+'-flight_'+flight+'*'
+                        
+                        dest_log_dir = prep_dest(dest_dir, week, river, mile, 'Log')
+                        dest_data_dir = prep_dest(dest_dir, week, river, mile, 'RawData')
+
+                        log_files = glob.glob(logs)
+                        for log_file in log_files:
+                            print('cp '+ log_file + ' ' + dest_log_dir)
+                            if (os.path.isfile(log_file)):
+                                shutil.copy2(log_file, dest_log_dir)
+
+                        data_files = glob.glob(data)
+                        for data_file in data_files:
+                            print('cp '+ data_file + ' ' + data_dir)
+                            if (os.path.isfile(data_file)):
+                                shutil.copy2(dest_file, dest_data_dir)
+
+    
 
 def make_dest_dirs(dest_dir, flight_log):
-    # we want to go to the following layout
-    # Week3
-    #   SnakeRiver
-    #       236.5
-    #           Log
-    #           RawData
-    #       233
-    #           Log
-    #           RawData
+    # we want to go from the Aeryon layout
+    # 85/
+    #   Log/
+    #       log files
+    #   RawData/
+    #       many dng and nfo files
+    #
+    # to the following layout
+    # Week3/
+    #   SnakeRiver/
+    #       236.5/
+    #           Log/
+    #               log files
+    #           RawData/
+    #               many dng and nfo files
+    #       233/
+    #           Log/
+    #               log files
+    #           RawData/
+    #               many dng and nfo files
 
-    if not os.path.isdir(dest_dir):
-        print('Creating %s' % dest_dir)
+    check_folder(dest_dir)
 
     for week,value in flight_log.iteritems():
         print week
@@ -80,11 +135,11 @@ def make_dest_dirs(dest_dir, flight_log):
 
 def main():
     flight_log = load_flight_log('flight_log.yml')
-    pp.pprint(flight_log)
+    #pp.pprint(flight_log)
     
-
-
     make_dest_dirs(dest_dir, flight_log)
+    copy_files(source_dir, dest_dir, flight_log)
+    
     #file_name = '2012-11-07-flight_007-050.dng'
     #[date, flight] = parse_filename(file_name)
     #print date
