@@ -8,3 +8,28 @@ When you have multiple flights over multiple days, and are faced with copying hu
 
 This program is a stab at solving the issue. As before, you generate an external file that maps the day and flight number to a meaningful folder hierarchy.
 The python script will then copy files from the usb 'data dump' directories into the meaningful user defined folder structure.
+
+
+we want to go from the Aeryon layout
+```
+85/
+    Log/
+        log files
+    RawData/
+        many dng and nfo files
+```
+to the following layout
+```
+Week3/
+    SnakeRiver/
+        236.5/
+            Log/
+                log files
+            RawData/
+                many dng and nfo files
+        233/
+            Log/
+                log files
+            RawData/
+                many dng and nfo files
+```
