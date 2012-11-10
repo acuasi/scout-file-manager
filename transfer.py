@@ -35,77 +35,56 @@ def parse_filename(file_name):
     flight_no = int(re.split('\_', flight_str)[1])
     return date, flight_no
 
+def check_folder(path):
+    if not os.path.isdir(path):
+        print('Creating %s' % path)
 
 def make_dest_dirs(dest_dir, flight_log):
-    if(os.path.isdir(dest_dir)):
-        print('%s exists' % dest_dir)
-    else:
+    # we want to go to the following layout
+    # Week3
+    #   SnakeRiver
+    #       236.5
+    #           Log
+    #           RawData
+    #       233
+    #           Log
+    #           RawData
+
+    if not os.path.isdir(dest_dir):
         print('Creating %s' % dest_dir)
-    print('')
 
-    # dest_dir/Week3
-    week_dir = os.path.join(dest_dir, 'Week3')
-    if(os.path.isdir(week_dir)):
-        print('%s exists' % week_dir)
-    else:
-        print('Creating %s' % week_dir)
-    print('')
+    for week,value in flight_log.iteritems():
+        print week
+        week_dir = os.path.join(dest_dir, week)
+        check_folder(week_dir)
 
-    # dest_dir/Week3/SnakeRiver
-    river_dir = os.path.join(week_dir, 'SnakeRiver')
-    if(os.path.isdir(river_dir)):
-        print('%s exists' % river_dir)
-    else:
-        print('Creating %s' % river_dir)
-    print('')
+        for river, value in flight_log[week].iteritems():
+            print("  " + river)
+            river_dir = os.path.join(week_dir, river)
+            check_folder(river_dir)
 
-    # dest_dir/Week3/SnakeRiver/date
-    date_dir = os.path.join(river_dir, '2012-11-06')
-    if(os.path.isdir(date_dir)):
-        print('%s exists' % date_dir)
-    else:
-        print('Creating %s' % date_dir)
-    print('')
+            for date, value in flight_log[week][river].iteritems():
+                # we dont need to make a date directory in our desired layout
+                # but we will need to know it in order to progress through the data structure
 
-    # dest_dir/Week3/SnakeRiver/date/mile_no
-    mile_dir = os.path.join(date_dir, '236.5')
-    if(os.path.isdir(mile_dir)):
-        print('%s exists' % mile_dir)
-    else:
-        print('Creating %s' % mile_dir)
-    print('')
+                for mile, value in flight_log[week][river][date].iteritems():
+                    print("      " + mile)
+                    mile_dir = os.path.join(river_dir, mile)
+                    check_folder(mile_dir)
 
-    # dest_dir/Week3/SnakeRiver/date/mile_no/Log
-    log_dir = os.path.join(mile_dir, 'Log')
-    if(os.path.isdir(log_dir)):
-        print('%s exists' % log_dir)
-    else:
-        print('Creating %s' % log_dir)
-    print('')
+                    for folder in ['Log', 'RawData']:
+                        lowest_dir = os.path.join(mile_dir, folder)
+                        check_folder(lowest_dir)
 
-    # dest_dir/Week3/SnakeRiver/date/mile_no/RawData  
-    rawdata_dir = os.path.join(mile_dir, 'RawData')
-    if(os.path.isdir(rawdata_dir)):
-        print('%s exists' % rawdata_dir)
-    else:
-        print('Creating %s' % rawdata_dir)
-    print('')        
     return
 
 def main():
     flight_log = load_flight_log('flight_log.yml')
     pp.pprint(flight_log)
-    for week,value in flight_log.iteritems():
-        print week
-        for river, value in flight_log[week].iteritems():
-            print("  " + river)
-            for date, value in flight_log[week][river].iteritems():
-                print("    " + date)
-                for mile, value in flight_log[week][river][date].iteritems():
-                    print("      " + mile)
+    
 
 
-    #make_dest_dirs(dest_dir)
+    make_dest_dirs(dest_dir, flight_log)
     #file_name = '2012-11-07-flight_007-050.dng'
     #[date, flight] = parse_filename(file_name)
     #print date
